@@ -404,7 +404,7 @@ analyzeDisease?.addEventListener('click', async () => {
     */
 
     const response = await fetch(
-      '/api/detect-disease',
+      'http://localhost:3001/api/detect-disease',
       {
         method: 'POST',
         body: formData
