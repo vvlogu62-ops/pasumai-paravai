@@ -58,7 +58,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
         <div class="card">
           <span>📋</span>
-          <h3>12</h3>
+          <h3 id="applicationCount">12</h3>
           <p>Applications</p>
         </div>
 
@@ -93,6 +93,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
             id="locationButton"
             class="upload-btn"
             style="margin-top: 15px;"
+            type="button"
           >
             📍 Detect My Location
           </button>
@@ -138,23 +139,44 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       </section>
 
       <section class="disease-card">
+
         <div class="section-title">
-          <h2>Crop Disease Detection</h2>
+          <h2>🌿 Crop Disease Detection</h2>
           <span>AI DEMO</span>
         </div>
 
-        <p class="disease-description">Upload a crop photo to analyze the field condition.</p>
+        <p class="disease-description">
+          Upload a crop photo to analyze the field condition.
+        </p>
 
-        <label class="upload-btn" for="diseasePhoto">Upload Crop Photo</label>
-        <input id="diseasePhoto" type="file" accept="image/*" hidden />
+        <label class="upload-btn" for="diseasePhoto">
+          📷 Upload Crop Photo
+        </label>
+
+        <input
+          id="diseasePhoto"
+          type="file"
+          accept="image/*"
+          hidden
+        />
 
         <div id="diseasePreview"></div>
 
-        <button id="analyzeDisease" class="submit-btn" type="button" disabled>
+        <button
+          id="analyzeDisease"
+          class="submit-btn"
+          type="button"
+          disabled
+        >
           Analyze Crop
         </button>
 
-        <div id="diseaseResult" class="disease-result" style="display:none"></div>
+        <div
+          id="diseaseResult"
+          class="disease-result"
+          style="display:none"
+        ></div>
+
       </section>
 
       <section class="bottom-grid">
@@ -202,36 +224,63 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       </section>
 
       <section class="scheme-application">
+
         <div class="section-title">
           <h2>Government Scheme Application</h2>
           <span>NEW</span>
         </div>
 
         <form class="application-form" id="applicationForm">
+
           <div class="form-group">
             <label for="farmerName">Farmer Name</label>
-            <input id="farmerName" type="text" placeholder="Enter farmer name" required />
+            <input
+              id="farmerName"
+              type="text"
+              placeholder="Enter farmer name"
+              required
+            />
           </div>
 
           <div class="form-group">
             <label for="mobileNumber">Mobile Number</label>
-            <input id="mobileNumber" type="tel" placeholder="Enter mobile number" required />
+            <input
+              id="mobileNumber"
+              type="tel"
+              placeholder="Enter mobile number"
+              required
+            />
           </div>
 
           <div class="form-group">
             <label for="schemeSelect">Select Scheme</label>
+
             <select id="schemeSelect" required>
               <option value="">Select a scheme</option>
-              <option value="Agriculture Development Scheme">Agriculture Development Scheme</option>
-              <option value="Green Agriculture Scheme">Green Agriculture Scheme</option>
-              <option value="Farmer Support Scheme">Farmer Support Scheme</option>
+              <option value="Agriculture Development Scheme">
+                Agriculture Development Scheme
+              </option>
+              <option value="Green Agriculture Scheme">
+                Green Agriculture Scheme
+              </option>
+              <option value="Farmer Support Scheme">
+                Farmer Support Scheme
+              </option>
             </select>
           </div>
 
-          <button id="submitApplication" class="submit-btn" type="submit">Submit Application</button>
+          <button
+            id="submitApplication"
+            class="submit-btn"
+            type="submit"
+          >
+            Submit Application
+          </button>
+
         </form>
 
         <div id="applicationResult" style="display:none"></div>
+
       </section>
 
     </main>
@@ -264,6 +313,9 @@ const applicationForm =
 const applicationResult =
   document.querySelector<HTMLDivElement>('#applicationResult')
 
+const applicationCount =
+  document.querySelector<HTMLHeadingElement>('#applicationCount')
+
 const farmerName =
   document.querySelector<HTMLInputElement>('#farmerName')
 
@@ -282,8 +334,6 @@ const diseasePreview =
 const analyzeDisease =
   document.querySelector<HTMLButtonElement>('#analyzeDisease')
 
-console.log('Analyze button:', analyzeDisease)
-
 const diseaseResult =
   document.querySelector<HTMLDivElement>('#diseaseResult')
 
@@ -293,25 +343,46 @@ let currentLongitude: number | null = null
 let applicationNumber = 1
 let diseasePhotoUrl = ''
 
+// ------------------------------------
+// CROP PHOTO
+// ------------------------------------
+
 diseasePhoto?.addEventListener('change', () => {
+
   const file = diseasePhoto.files?.[0]
+
   if (!file || !diseasePreview || !analyzeDisease) return
 
-  if (diseasePhotoUrl) URL.revokeObjectURL(diseasePhotoUrl)
+  if (diseasePhotoUrl) {
+    URL.revokeObjectURL(diseasePhotoUrl)
+  }
+
   diseasePhotoUrl = URL.createObjectURL(file)
-  diseasePreview.innerHTML = `<img src="${diseasePhotoUrl}" alt="Uploaded crop" class="disease-preview-image" />`
+
+  diseasePreview.innerHTML = `
+    <img
+      src="${diseasePhotoUrl}"
+      alt="Uploaded crop"
+      class="disease-preview-image"
+    />
+  `
+
   analyzeDisease.disabled = false
-  if (diseaseResult) diseaseResult.style.display = 'none'
+
+  if (diseaseResult) {
+    diseaseResult.style.display = 'none'
+  }
 })
 
+// ------------------------------------
+// AI DISEASE DETECTION
+// ------------------------------------
+
 analyzeDisease?.addEventListener('click', async () => {
-  console.log('🤖 Analyze button clicked')
 
   const file = diseasePhoto?.files?.[0]
-  console.log('📷 Selected file:', file)
 
   if (!file || !diseaseResult || !analyzeDisease) {
-    console.log('❌ Missing file/result/button')
     return
   }
 
@@ -319,45 +390,108 @@ analyzeDisease?.addEventListener('click', async () => {
   analyzeDisease.disabled = true
 
   try {
+
     const formData = new FormData()
+
     formData.append('image', file)
 
-    console.log('📤 Sending image to AI server')
+    /*
+      IMPORTANT:
+      This uses the same online domain.
 
-    const response = await fetch('http://localhost:3001/api/detect-disease', {
-      method: 'POST',
-      body: formData
-    })
+      If Render backend is deployed separately,
+      change this URL to your Render backend URL.
+    */
 
-    console.log('📥 AI server response:', response.status)
+    const response = await fetch(
+      '/api/detect-disease',
+      {
+        method: 'POST',
+        body: formData
+      }
+    )
 
-    if (!response.ok) throw new Error('AI server error')
+    if (!response.ok) {
+      throw new Error('AI server error')
+    }
 
     const result = await response.json()
+
     diseaseResult.style.display = 'block'
+
     diseaseResult.innerHTML = `
       <div class="disease-result-header">
-        <strong>AI Detection Result</strong>
-        <span class="badge pending">${result.status}</span>
+
+        <strong>
+          🤖 AI Detection Result
+        </strong>
+
+        <span class="badge pending">
+          ${result.status ?? 'Detected'}
+        </span>
+
       </div>
+
       <div class="disease-info">
-        <p><strong>Crop:</strong> ${result.crop}</p>
-        <p><strong>Detection:</strong> ${result.disease}</p>
-        <p><strong>Confidence:</strong> ${result.confidence}%</p>
-        <p class="disease-note">AI result is for screening/demo purposes. Expert verification is recommended.</p>
+
+        <p>
+          <strong>Crop:</strong>
+          ${result.crop ?? 'Unknown'}
+        </p>
+
+        <p>
+          <strong>Detection:</strong>
+          ${result.disease ?? 'No disease detected'}
+        </p>
+
+        <p>
+          <strong>Confidence:</strong>
+          ${result.confidence ?? 0}%
+        </p>
+
+        <p class="disease-note">
+          AI result is for screening/demo purposes.
+          Expert verification is recommended.
+        </p>
+
       </div>
     `
+
   } catch (error) {
+
     console.error(error)
+
     diseaseResult.style.display = 'block'
-    diseaseResult.innerHTML = '<div class="search-error">AI server connection failed.<br>Please make sure the AI server is running.</div>'
+
+    diseaseResult.innerHTML = `
+      <div class="search-error">
+
+        ❌ AI server connection failed.
+
+        <br><br>
+
+        The dashboard is online, but the AI backend
+        is not connected yet.
+
+      </div>
+    `
+
   } finally {
+
     analyzeDisease.textContent = 'Analyze Crop'
+
     analyzeDisease.disabled = false
+
   }
+
 })
 
+// ------------------------------------
+// APPLICATION
+// ------------------------------------
+
 type SavedApplication = {
+
   id: string
   name: string
   mobile: string
@@ -366,350 +500,993 @@ type SavedApplication = {
   photoUrl: string
   latitude: number | null
   longitude: number | null
+
 }
 
 const savedApplications: SavedApplication[] = []
 
 function createApplicationId() {
+
   const year = new Date().getFullYear()
-  const number = String(applicationNumber).padStart(4, '0')
+
+  const number =
+    String(applicationNumber).padStart(4, '0')
+
   applicationNumber++
+
   return `PP-${year}-${number}`
 }
 
-function showApplicationTracking(id: string, name: string, scheme: string) {
+function showApplicationTracking(
+  id: string,
+  name: string,
+  scheme: string
+) {
+
   if (!applicationResult) return
 
   applicationResult.style.display = 'block'
+
   applicationResult.innerHTML = `
+
     <div class="tracking-card">
+
       <div class="tracking-header">
+
         <div>
-          <strong class="tracking-title">Application Submitted</strong>
+
+          <strong class="tracking-title">
+            Application Submitted
+          </strong>
+
           <p>${name}</p>
+
         </div>
-        <span class="tracking-status">SUBMITTED</span>
+
+        <span class="tracking-status">
+          SUBMITTED
+        </span>
+
       </div>
 
       <div class="application-id">
+
         <strong>Application ID</strong>
+
         <div>${id}</div>
+
       </div>
 
       <div class="tracking-scheme">
+
         <strong>Scheme</strong>
+
         <p>${scheme}</p>
+
       </div>
 
       <div class="tracking-steps">
-        <div class="tracking-step"><span>1</span><div><strong>Submitted</strong><p>Application received</p></div></div>
-        <div class="tracking-step inactive"><span>2</span><div><strong>Under Review</strong><p>Application will be reviewed</p></div></div>
-        <div class="tracking-step inactive"><span>3</span><div><strong>Field Verification</strong><p>Field location verification</p></div></div>
-        <div class="tracking-step inactive"><span>4</span><div><strong>Approved</strong><p>Final approval</p></div></div>
+
+        <div class="tracking-step">
+
+          <span>1</span>
+
+          <div>
+            <strong>Submitted</strong>
+            <p>Application received</p>
+          </div>
+
+        </div>
+
+        <div class="tracking-step inactive">
+
+          <span>2</span>
+
+          <div>
+            <strong>Under Review</strong>
+            <p>Application will be reviewed</p>
+          </div>
+
+        </div>
+
+        <div class="tracking-step inactive">
+
+          <span>3</span>
+
+          <div>
+            <strong>Field Verification</strong>
+            <p>Field location verification</p>
+          </div>
+
+        </div>
+
+        <div class="tracking-step inactive">
+
+          <span>4</span>
+
+          <div>
+            <strong>Approved</strong>
+            <p>Final approval</p>
+          </div>
+
+        </div>
+
       </div>
+
     </div>
   `
 }
 
-applicationForm?.addEventListener('submit', (event) => {
-  event.preventDefault()
+// ------------------------------------
+// APPLICATION FORM
+// ------------------------------------
 
-  if (!farmerName?.value.trim() || !mobileNumber?.value.trim() || !schemeSelect?.value) {
-    applicationForm.reportValidity()
-    return
+applicationForm?.addEventListener(
+  'submit',
+  (event) => {
+
+    event.preventDefault()
+
+    if (
+      !farmerName?.value.trim() ||
+      !mobileNumber?.value.trim() ||
+      !schemeSelect?.value
+    ) {
+
+      applicationForm.reportValidity()
+
+      return
+    }
+
+    const application: SavedApplication = {
+
+      id: createApplicationId(),
+
+      name: farmerName.value.trim(),
+
+      mobile: mobileNumber.value.trim(),
+
+      scheme: schemeSelect.value,
+
+      status: 'Submitted',
+
+      photoUrl: uploadedPhotoUrl,
+
+      latitude: currentLatitude,
+
+      longitude: currentLongitude
+
+    }
+
+    savedApplications.push(application)
+
+    renderOfficerDashboard()
+
+    showApplicationTracking(
+      application.id,
+      application.name,
+      application.scheme
+    )
+
+    if (applicationCount) {
+      applicationCount.textContent =
+        String(12 + savedApplications.length)
+    }
+
+    applicationForm.reset()
+
   }
+)
 
-  const application: SavedApplication = {
-    id: createApplicationId(),
-    name: farmerName.value.trim(),
-    mobile: mobileNumber.value.trim(),
-    scheme: schemeSelect.value,
-    status: 'Submitted',
-    photoUrl: uploadedPhotoUrl,
-    latitude: currentLatitude,
-    longitude: currentLongitude
-  }
+// ------------------------------------
+// TRACK APPLICATION
+// ------------------------------------
 
-  savedApplications.push(application)
-  renderOfficerDashboard()
-  showApplicationTracking(application.id, application.name, application.scheme)
+const searchSection =
+  document.createElement('section')
 
-  applicationForm.reset()
-})
+searchSection.className =
+  'scheme-application'
 
-const searchSection = document.createElement('section')
-searchSection.className = 'scheme-application'
 searchSection.innerHTML = `
+
   <div class="section-title">
+
     <h2>Track Application</h2>
+
     <span>TRACK</span>
+
   </div>
+
   <div class="application-form application-search-form">
+
     <div class="form-group">
-      <label for="searchApplicationId">Application ID</label>
-      <input id="searchApplicationId" type="text" placeholder="Example: PP-2026-0001" />
+
+      <label for="searchApplicationId">
+        Application ID
+      </label>
+
+      <input
+        id="searchApplicationId"
+        type="text"
+        placeholder="Example: PP-2026-0001"
+      />
+
     </div>
-    <button id="searchApplication" class="submit-btn" type="button">Track Application</button>
+
+    <button
+      id="searchApplication"
+      class="submit-btn"
+      type="button"
+    >
+      Track Application
+    </button>
+
   </div>
+
   <div id="searchResult" style="display:none"></div>
+
 `
-document.querySelector('.content')?.appendChild(searchSection)
+
+document
+  .querySelector('.content')
+  ?.appendChild(searchSection)
 
 const searchInput =
-  document.querySelector<HTMLInputElement>('#searchApplicationId')
+  document.querySelector<HTMLInputElement>(
+    '#searchApplicationId'
+  )
 
 const searchButton =
-  document.querySelector<HTMLButtonElement>('#searchApplication')
+  document.querySelector<HTMLButtonElement>(
+    '#searchApplication'
+  )
 
 const searchResult =
-  document.querySelector<HTMLDivElement>('#searchResult')
+  document.querySelector<HTMLDivElement>(
+    '#searchResult'
+  )
 
-searchButton?.addEventListener('click', () => {
-  const searchId = searchInput?.value.trim()
-  if (!searchId) {
-    alert('Please enter an Application ID.')
+searchButton?.addEventListener(
+  'click',
+  () => {
+
+    const searchId =
+      searchInput?.value.trim()
+
+    if (!searchId) {
+
+      alert(
+        'Please enter an Application ID.'
+      )
+
+      return
+    }
+
+    const application =
+      savedApplications.find(
+        (item) =>
+          item.id === searchId
+      )
+
+    if (!searchResult) return
+
+    searchResult.style.display =
+      'block'
+
+    if (!application) {
+
+      searchResult.innerHTML = `
+        <div class="search-error">
+
+          Application not found.
+
+          <br>
+
+          Please check the Application ID.
+
+        </div>
+      `
+
+      return
+    }
+
+    searchResult.innerHTML = `
+
+      <div class="tracking-card search-card">
+
+        <strong class="tracking-title">
+          Application Found
+        </strong>
+
+        <div class="application-id">
+
+          <strong>Application ID</strong>
+
+          <div>${application.id}</div>
+
+        </div>
+
+        <p>
+          <strong>Farmer:</strong>
+          ${application.name}
+        </p>
+
+        <p>
+          <strong>Mobile:</strong>
+          ${application.mobile}
+        </p>
+
+        <p>
+          <strong>Scheme:</strong>
+          ${application.scheme}
+        </p>
+
+        <div class="tracking-status search-status">
+
+          Status: ${application.status}
+
+        </div>
+
+      </div>
+
+    `
+  }
+)
+
+// ------------------------------------
+// UPDATE SEARCH
+// ------------------------------------
+
+function updateSearchResult(
+  application: SavedApplication
+) {
+
+  if (
+    !searchResult ||
+    searchInput?.value.trim() !==
+      application.id
+  ) {
+
     return
   }
 
-  const application = savedApplications.find((item) => item.id === searchId)
-  if (!searchResult) return
-
-  searchResult.style.display = 'block'
-  if (!application) {
-    searchResult.innerHTML = '<div class="search-error">Application not found.<br>Please check the Application ID.</div>'
-    return
-  }
+  searchResult.style.display =
+    'block'
 
   searchResult.innerHTML = `
-    <div class="tracking-card search-card">
-      <strong class="tracking-title">Application Found</strong>
-      <div class="application-id"><strong>Application ID</strong><div>${application.id}</div></div>
-      <p><strong>Farmer:</strong> ${application.name}</p>
-      <p><strong>Mobile:</strong> ${application.mobile}</p>
-      <p><strong>Scheme:</strong> ${application.scheme}</p>
-      <div class="tracking-status search-status">Status: ${application.status}</div>
-    </div>
-  `
-})
 
-function updateSearchResult(application: SavedApplication) {
-  if (!searchResult || searchInput?.value.trim() !== application.id) return
-
-  searchResult.style.display = 'block'
-  searchResult.innerHTML = `
     <div class="tracking-card search-card">
-      <strong class="tracking-title">Application Found</strong>
-      <div class="application-id"><strong>Application ID</strong><div>${application.id}</div></div>
-      <p><strong>Farmer:</strong> ${application.name}</p>
-      <p><strong>Mobile:</strong> ${application.mobile}</p>
-      <p><strong>Scheme:</strong> ${application.scheme}</p>
-      <div class="tracking-status search-status">Status: ${application.status}</div>
+
+      <strong class="tracking-title">
+        Application Found
+      </strong>
+
+      <div class="application-id">
+
+        <strong>Application ID</strong>
+
+        <div>${application.id}</div>
+
+      </div>
+
+      <p>
+        <strong>Farmer:</strong>
+        ${application.name}
+      </p>
+
+      <p>
+        <strong>Mobile:</strong>
+        ${application.mobile}
+      </p>
+
+      <p>
+        <strong>Scheme:</strong>
+        ${application.scheme}
+      </p>
+
+      <div class="tracking-status search-status">
+
+        Status: ${application.status}
+
+      </div>
+
     </div>
+
   `
 }
 
-const officerSection = document.createElement('section')
-officerSection.className = 'scheme-application'
+// ------------------------------------
+// OFFICER DASHBOARD
+// ------------------------------------
+
+const officerSection =
+  document.createElement('section')
+
+officerSection.className =
+  'scheme-application'
+
 officerSection.innerHTML = `
+
   <div class="section-title">
+
     <h2>Officer Dashboard</h2>
+
     <span>ADMIN</span>
+
   </div>
+
   <div class="officer-summary">
-    <div class="officer-metric total"><strong>Total Applications</strong><h2 id="officerTotal">0</h2></div>
-    <div class="officer-metric submitted"><strong>Submitted</strong><h2 id="officerSubmitted">0</h2></div>
-    <div class="officer-metric review"><strong>Under Review</strong><h2 id="officerReview">0</h2></div>
-    <div class="officer-metric approved"><strong>Approved</strong><h2 id="officerApproved">0</h2></div>
-    <div class="officer-metric rejected"><strong>Rejected</strong><h2 id="officerRejected">0</h2></div>
+
+    <div class="officer-metric total">
+
+      <strong>Total Applications</strong>
+
+      <h2 id="officerTotal">0</h2>
+
+    </div>
+
+    <div class="officer-metric submitted">
+
+      <strong>Submitted</strong>
+
+      <h2 id="officerSubmitted">0</h2>
+
+    </div>
+
+    <div class="officer-metric review">
+
+      <strong>Under Review</strong>
+
+      <h2 id="officerReview">0</h2>
+
+    </div>
+
+    <div class="officer-metric approved">
+
+      <strong>Approved</strong>
+
+      <h2 id="officerApproved">0</h2>
+
+    </div>
+
+    <div class="officer-metric rejected">
+
+      <strong>Rejected</strong>
+
+      <h2 id="officerRejected">0</h2>
+
+    </div>
+
   </div>
-  <div id="officerApplications" class="officer-applications"></div>
+
+  <div
+    id="officerApplications"
+    class="officer-applications"
+  ></div>
+
 `
-document.querySelector('.content')?.appendChild(officerSection)
+
+document
+  .querySelector('.content')
+  ?.appendChild(officerSection)
 
 function renderOfficerDashboard() {
-  const applications = savedApplications
-  const total = document.querySelector<HTMLElement>('#officerTotal')
-  const submitted = document.querySelector<HTMLElement>('#officerSubmitted')
-  const review = document.querySelector<HTMLElement>('#officerReview')
-  const approved = document.querySelector<HTMLElement>('#officerApproved')
-  const rejected = document.querySelector<HTMLElement>('#officerRejected')
-  const list = document.querySelector<HTMLElement>('#officerApplications')
+
+  const applications =
+    savedApplications
+
+  const total =
+    document.querySelector<HTMLElement>(
+      '#officerTotal'
+    )
+
+  const submitted =
+    document.querySelector<HTMLElement>(
+      '#officerSubmitted'
+    )
+
+  const review =
+    document.querySelector<HTMLElement>(
+      '#officerReview'
+    )
+
+  const approved =
+    document.querySelector<HTMLElement>(
+      '#officerApproved'
+    )
+
+  const rejected =
+    document.querySelector<HTMLElement>(
+      '#officerRejected'
+    )
+
+  const list =
+    document.querySelector<HTMLElement>(
+      '#officerApplications'
+    )
 
   if (!list) return
-  if (total) total.textContent = String(applications.length)
-  if (submitted) submitted.textContent = String(applications.filter((app) => app.status === 'Submitted').length)
-  if (review) review.textContent = String(applications.filter((app) => app.status === 'Under Review').length)
+
+  if (total) {
+    total.textContent =
+      String(applications.length)
+  }
+
+  if (submitted) {
+    submitted.textContent =
+      String(
+        applications.filter(
+          (app) =>
+            app.status === 'Submitted'
+        ).length
+      )
+  }
+
+  if (review) {
+    review.textContent =
+      String(
+        applications.filter(
+          (app) =>
+            app.status === 'Under Review'
+        ).length
+      )
+  }
+
   if (approved) {
-    approved.textContent = String(
-      applications.filter(
-        (app) => app.status === 'Approved'
-      ).length
-    )
+    approved.textContent =
+      String(
+        applications.filter(
+          (app) =>
+            app.status === 'Approved'
+        ).length
+      )
   }
 
   if (rejected) {
-    rejected.textContent = String(
-      applications.filter(
-        (app) => app.status === 'Rejected'
-      ).length
-    )
+    rejected.textContent =
+      String(
+        applications.filter(
+          (app) =>
+            app.status === 'Rejected'
+        ).length
+      )
   }
 
   if (applications.length === 0) {
-    list.innerHTML = '<div class="officer-empty">No applications submitted yet.</div>'
+
+    list.innerHTML = `
+      <div class="officer-empty">
+        No applications submitted yet.
+      </div>
+    `
+
     return
   }
 
-  list.innerHTML = applications.map((app) => {
-    const statusClass = app.status === 'Approved'
-      ? 'success'
-      : app.status === 'Under Review'
-        ? 'pending'
-        : app.status === 'Rejected'
-          ? 'rejected'
-          : 'active'
-    return `
-      <div class="officer-application-row">
-        <div><small>Application ID</small><strong>${app.id}</strong></div>
-        <div><small>Farmer</small><strong>${app.name}</strong></div>
-        <div><small>Scheme</small><strong>${app.scheme}</strong></div>
-        <div><small>Status</small><span class="badge ${statusClass}">${app.status}</span></div>
-        <div class="officer-actions">
-          <button class="action-review" data-id="${app.id}" type="button">Review</button>
-          <button class="action-approve" data-id="${app.id}" type="button">Approve</button>
-          <button class="action-reject" data-id="${app.id}" type="button">Reject</button>
-        </div>
-      </div>
-    `
-  }).join('')
+  list.innerHTML =
+    applications
+      .map((app) => {
+
+        const statusClass =
+          app.status === 'Approved'
+            ? 'success'
+            : app.status === 'Under Review'
+              ? 'pending'
+              : app.status === 'Rejected'
+                ? 'rejected'
+                : 'active'
+
+        return `
+
+          <div class="officer-application-row">
+
+            <div>
+              <small>Application ID</small>
+              <strong>${app.id}</strong>
+            </div>
+
+            <div>
+              <small>Farmer</small>
+              <strong>${app.name}</strong>
+            </div>
+
+            <div>
+              <small>Scheme</small>
+              <strong>${app.scheme}</strong>
+            </div>
+
+            <div>
+              <small>Status</small>
+              <span class="badge ${statusClass}">
+                ${app.status}
+              </span>
+            </div>
+
+            <div class="officer-actions">
+
+              <button
+                class="action-review"
+                data-id="${app.id}"
+                type="button"
+              >
+                Review
+              </button>
+
+              <button
+                class="action-approve"
+                data-id="${app.id}"
+                type="button"
+              >
+                Approve
+              </button>
+
+              <button
+                class="action-reject"
+                data-id="${app.id}"
+                type="button"
+              >
+                Reject
+              </button>
+
+            </div>
+
+          </div>
+
+        `
+      })
+      .join('')
 }
 
 renderOfficerDashboard()
 
-officerSection.addEventListener('click', (event) => {
-  const target = event.target as HTMLElement
-  const actionButton = target.closest<HTMLButtonElement>('button[data-id]')
-  if (!actionButton) return
+officerSection.addEventListener(
+  'click',
+  (event) => {
 
-  const application = savedApplications.find(
-    (item) => item.id === actionButton.dataset.id
-  )
-  if (!application) return
+    const target =
+      event.target as HTMLElement
 
-  if (actionButton.classList.contains('action-review')) {
-    application.status = 'Under Review'
-  } else if (actionButton.classList.contains('action-approve')) {
-    application.status = 'Approved'
-  } else if (actionButton.classList.contains('action-reject')) {
-    application.status = 'Rejected'
+    const actionButton =
+      target.closest<HTMLButtonElement>(
+        'button[data-id]'
+      )
+
+    if (!actionButton) return
+
+    const application =
+      savedApplications.find(
+        (item) =>
+          item.id ===
+          actionButton.dataset.id
+      )
+
+    if (!application) return
+
+    if (
+      actionButton.classList.contains(
+        'action-review'
+      )
+    ) {
+
+      application.status =
+        'Under Review'
+
+    } else if (
+      actionButton.classList.contains(
+        'action-approve'
+      )
+    ) {
+
+      application.status =
+        'Approved'
+
+    } else if (
+      actionButton.classList.contains(
+        'action-reject'
+      )
+    ) {
+
+      application.status =
+        'Rejected'
+    }
+
+    renderOfficerDashboard()
+
+    updateSearchResult(application)
+
   }
-
-  renderOfficerDashboard()
-  updateSearchResult(application)
-})
-
-
-// ------------------------------------
-// PHOTO UPLOAD
-// ------------------------------------
-
-photoInput?.addEventListener('change', () => {
-  const file = photoInput.files?.[0]
-  if (!file) return
-
-  if (uploadedPhotoUrl) URL.revokeObjectURL(uploadedPhotoUrl)
-  uploadedPhotoUrl = URL.createObjectURL(file)
-  document.querySelector('#photoPreview')?.remove()
-
-  const preview = document.createElement('img')
-  preview.id = 'photoPreview'
-  preview.src = uploadedPhotoUrl
-  preview.alt = 'Uploaded field photo'
-  preview.style.width = '100%'
-  preview.style.maxHeight = '300px'
-  preview.style.objectFit = 'cover'
-  preview.style.borderRadius = '14px'
-  preview.style.marginTop = '15px'
-  document.querySelector('.map-card')?.appendChild(preview)
-  updateFieldRecord()
-})
-
-const defaultLatitude = 10.9601
-const defaultLongitude = 79.3845
-
-const map = L.map('fieldMap').setView(
-  [defaultLatitude, defaultLongitude],
-  13
 )
+
+// ------------------------------------
+// FIELD PHOTO
+// ------------------------------------
+
+photoInput?.addEventListener(
+  'change',
+  () => {
+
+    const file =
+      photoInput.files?.[0]
+
+    if (!file) return
+
+    if (uploadedPhotoUrl) {
+      URL.revokeObjectURL(
+        uploadedPhotoUrl
+      )
+    }
+
+    uploadedPhotoUrl =
+      URL.createObjectURL(file)
+
+    document
+      .querySelector('#photoPreview')
+      ?.remove()
+
+    const preview =
+      document.createElement('img')
+
+    preview.id =
+      'photoPreview'
+
+    preview.src =
+      uploadedPhotoUrl
+
+    preview.alt =
+      'Uploaded field photo'
+
+    preview.style.width =
+      '100%'
+
+    preview.style.maxHeight =
+      '300px'
+
+    preview.style.objectFit =
+      'cover'
+
+    preview.style.borderRadius =
+      '14px'
+
+    preview.style.marginTop =
+      '15px'
+
+    document
+      .querySelector('.map-card')
+      ?.appendChild(preview)
+
+    updateFieldRecord()
+
+  }
+)
+
+// ------------------------------------
+// MAP
+// ------------------------------------
+
+const defaultLatitude =
+  10.9601
+
+const defaultLongitude =
+  79.3845
+
+const map =
+  L.map('fieldMap').setView(
+    [
+      defaultLatitude,
+      defaultLongitude
+    ],
+    13
+  )
 
 L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   {
-    attribution: '&copy; OpenStreetMap contributors',
+    attribution:
+      '&copy; OpenStreetMap contributors',
+
     maxZoom: 19
   }
 ).addTo(map)
 
-let currentMarker: L.Marker | null = null
+let currentMarker:
+  L.Marker | null = null
 
-currentMarker = L.marker([
-  defaultLatitude,
-  defaultLongitude
-])
-  .addTo(map)
-  .bindPopup('<strong>Pasumai Paravai Field</strong><br>Monitoring Area')
+currentMarker =
+  L.marker([
+    defaultLatitude,
+    defaultLongitude
+  ])
+    .addTo(map)
+    .bindPopup(
+      '<strong>Pasumai Paravai Field</strong><br>Monitoring Area'
+    )
 
 setTimeout(() => {
+
   map.invalidateSize()
+
 }, 300)
 
-function updateFieldRecord() {
-  if (!fieldRecord || !uploadedPhotoUrl || currentLatitude === null || currentLongitude === null) return
-  fieldRecord.innerHTML = '<strong>Field Record Ready</strong><br>Photo and location captured successfully.'
-  fieldRecord.style.marginTop = '15px'
-  fieldRecord.style.padding = '15px'
-  fieldRecord.style.background = '#f0fdf4'
-  fieldRecord.style.border = '1px solid #bbf7d0'
-  fieldRecord.style.borderRadius = '10px'
-  fieldRecord.style.color = '#166534'
-}
+// ------------------------------------
+// FIELD RECORD
+// ------------------------------------
 
-locationButton?.addEventListener('click', () => {
-  if (!navigator.geolocation) {
-    alert('Location is not supported by this browser.')
+function updateFieldRecord() {
+
+  if (
+    !fieldRecord ||
+    !uploadedPhotoUrl ||
+    currentLatitude === null ||
+    currentLongitude === null
+  ) {
+
     return
   }
 
-  locationButton.textContent = 'Detecting location...'
-  navigator.geolocation.getCurrentPosition((position) => {
-    currentLatitude = position.coords.latitude
-    currentLongitude = position.coords.longitude
-    map.setView([currentLatitude, currentLongitude], 16)
+  fieldRecord.innerHTML = `
 
-    if (currentMarker) {
-      map.removeLayer(currentMarker)
-    }
+    <strong>
+      ✅ Field Record Ready
+    </strong>
 
-    currentMarker = L.marker([currentLatitude, currentLongitude])
-      .addTo(map)
-      .bindPopup(
-        '<strong>Your Current Location</strong>'
+    <br>
+
+    Photo and location captured successfully.
+
+    <br><br>
+
+    Latitude:
+    ${currentLatitude.toFixed(6)}
+
+    <br>
+
+    Longitude:
+    ${currentLongitude.toFixed(6)}
+
+  `
+
+  fieldRecord.style.marginTop =
+    '15px'
+
+  fieldRecord.style.padding =
+    '15px'
+
+  fieldRecord.style.background =
+    '#f0fdf4'
+
+  fieldRecord.style.border =
+    '1px solid #bbf7d0'
+
+  fieldRecord.style.borderRadius =
+    '10px'
+
+  fieldRecord.style.color =
+    '#166534'
+}
+
+// ------------------------------------
+// LOCATION
+// ------------------------------------
+
+locationButton?.addEventListener(
+  'click',
+  () => {
+
+    if (!navigator.geolocation) {
+
+      alert(
+        'Location is not supported by this browser.'
       )
-      .openPopup()
-    locationButton.textContent = 'Location Detected'
 
-    if (locationInfo) {
-      locationInfo.innerHTML = `<strong>Current Location</strong><br>Latitude: ${currentLatitude.toFixed(6)}<br>Longitude: ${currentLongitude.toFixed(6)}`
-      locationInfo.style.marginTop = '15px'
-      locationInfo.style.padding = '15px'
-      locationInfo.style.background = '#dcfce7'
-      locationInfo.style.borderRadius = '10px'
-      locationInfo.style.color = '#166534'
+      return
     }
-    if (locationCount) locationCount.textContent = '19'
-    updateFieldRecord()
-  }, () => {
-    locationButton.textContent = 'Detect My Location'
-    alert('Please allow location access in your browser.')
-  })
-})
+
+    locationButton.textContent =
+      'Detecting location...'
+
+    navigator.geolocation.getCurrentPosition(
+
+      (position) => {
+
+        currentLatitude =
+          position.coords.latitude
+
+        currentLongitude =
+          position.coords.longitude
+
+        map.setView(
+          [
+            currentLatitude,
+            currentLongitude
+          ],
+          16
+        )
+
+        if (currentMarker) {
+
+          map.removeLayer(
+            currentMarker
+          )
+        }
+
+        currentMarker =
+          L.marker([
+            currentLatitude,
+            currentLongitude
+          ])
+            .addTo(map)
+            .bindPopup(
+              '<strong>Your Current Location</strong>'
+            )
+            .openPopup()
+
+        locationButton.textContent =
+          'Location Detected ✅'
+
+        if (locationInfo) {
+
+          locationInfo.innerHTML = `
+
+            <strong>
+              📍 Current Location
+            </strong>
+
+            <br>
+
+            Latitude:
+            ${currentLatitude.toFixed(6)}
+
+            <br>
+
+            Longitude:
+            ${currentLongitude.toFixed(6)}
+
+          `
+
+          locationInfo.style.marginTop =
+            '15px'
+
+          locationInfo.style.padding =
+            '15px'
+
+          locationInfo.style.background =
+            '#dcfce7'
+
+          locationInfo.style.borderRadius =
+            '10px'
+
+          locationInfo.style.color =
+            '#166534'
+        }
+
+        if (locationCount) {
+          locationCount.textContent =
+            '19'
+        }
+
+        updateFieldRecord()
+
+      },
+
+      () => {
+
+        locationButton.textContent =
+          'Detect My Location'
+
+        alert(
+          'Please allow location access in your browser.'
+        )
+
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+
+    )
+
+  }
+)
