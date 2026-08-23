@@ -4,9 +4,12 @@ const multer = require('multer')
 const { predictDisease } = require('./aiModel')
 
 const app = express()
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  }
 })
 
 app.use(cors())
@@ -20,20 +23,32 @@ app.get('/api/health', (req, res) => {
 })
 
 app.post('/api/detect-disease', upload.single('image'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({
-      error: 'No image uploaded'
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No image uploaded'
+      })
+    }
+
+    const prediction = await predictDisease(req.file.originalname)
+
+    res.json({
+      status: prediction.disease === 'Healthy'
+        ? 'Healthy'
+        : 'Possible Issue',
+      ...prediction
+    })
+  } catch (error) {
+    console.error('AI error:', error)
+
+    res.status(500).json({
+      error: 'AI detection failed'
     })
   }
-
-  const prediction = await predictDisease(req.file.originalname)
-
-  res.json({
-    status: prediction.disease === 'Healthy' ? 'Healthy' : 'Possible Issue',
-    ...prediction
-  })
 })
 
-app.listen(3001, () => {
-  console.log('🌱 AI server running on http://localhost:3001')
+const PORT = process.env.PORT || 3001
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🌱 Pasumai Paravai AI server running on port ${PORT}`)
 })
